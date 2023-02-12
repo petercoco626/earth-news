@@ -1,64 +1,7 @@
+import Earth from "components/earth";
 import Head from "next/head";
-import { useEffect, useRef } from "react";
-import * as THREE from "three";
 
 export default function Home() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const scene = new THREE.Scene();
-
-    const camera = new THREE.PerspectiveCamera(
-      50,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    camera.position.z = 5;
-
-    const renderer = new THREE.WebGLRenderer();
-    console.log(window.innerWidth, window.innerHeight);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    if (containerRef.current) {
-      containerRef.current.appendChild(renderer.domElement);
-    }
-
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
-
-    camera.position.z = 5;
-
-    // const loader = new THREE.Loader();
-    // loader.(
-    //   "path/to/your/file.obj",
-    //   function (object : any) {
-    //     scene.add(object);
-    //   },
-    //   function (xhr : any) {
-    //     console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
-    //   },
-    //   function (error : any) {
-    //     console.log("An error happened");
-    //   }
-    // );
-
-    const animate = function () {
-      requestAnimationFrame(animate);
-
-      // cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => {
-      renderer.dispose();
-      // scene.dispose();
-    };
-  }, []);
-
   return (
     <>
       <Head>
@@ -67,7 +10,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div ref={containerRef} />;
+      <Earth />
     </>
   );
 }
