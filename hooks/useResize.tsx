@@ -5,10 +5,10 @@ interface IWindowSize {
   height: number;
 }
 
-export function useResize(): IWindowSize {
+export function useResize({ width, height }: IWindowSize): IWindowSize {
   const [windowSize, setWindowSize] = useState<IWindowSize>({
-    width: 1920,
-    height: 1080,
+    width,
+    height,
   });
 
   useEffect(() => {

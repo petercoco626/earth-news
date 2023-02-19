@@ -1,69 +1,69 @@
 import { useResize } from "hooks/useResize";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
-export default function Earth() {
-  const windowSize = useResize();
+import styles from "./index.module.css";
 
+export default function Earth() {
   const containerRef = useRef<HTMLDivElement>(null);
-  let renderer: THREE.WebGLRenderer;
-  let camera: THREE.PerspectiveCamera;
+
+  const [loading, setLoading] = useState(true);
+  const [renderer, setRenderer] = useState<any>();
+  const [_camera, setCamera] = useState<any>();
+  const [scene] = useState(new THREE.Scene());
+
+  const handleWindowResize = useCallback(() => {
+    const { current: container } = containerRef;
+    if (container && renderer) {
+      const scW = container.clientWidth;
+      const scH = container.clientHeight;
+
+      renderer.setSize(scW, scH);
+    }
+  }, [renderer]);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const { current: container } = containerRef;
+    if (container && !renderer) {
+      console.log("Hi");
+      const scW = container.clientWidth;
+      const scH = container.clientHeight;
+      console.log(scW, scH);
 
-    const scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(
-      50,
-      windowSize.width / windowSize.height,
-      0.1,
-      1000
-    );
-    camera.position.z = 5;
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(scW, scH);
+      container.appendChild(renderer.domElement);
+      setRenderer(renderer);
 
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize(windowSize.width, windowSize.height);
-    containerRef.current.appendChild(renderer.domElement);
+      const camera = new THREE.PerspectiveCamera(50, scW / scH, 0.1, 1000);
 
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      const cube = new THREE.Mesh(geometry, material);
+      camera.position.z = 5;
+      scene.add(cube);
 
-    scene.add(cube);
+      const animate = function () {
+        requestAnimationFrame(animate);
 
-    // const loader = new THREE.Loader();
-    // loader.(
-    //   "path/to/your/file.obj",
-    //   function (object : any) {
-    //     scene.add(object);
-    //   },
-    //   function (xhr : any) {
-    //     console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`);
-    //   },
-    //   function (error : any) {
-    //     console.log("An error happened");
-    //   }
-    // );
+        cube.rotation.x += 0.01;
+        renderer.render(scene, camera);
+      };
+      animate();
 
-    const animate = function () {
-      requestAnimationFrame(animate);
-
-      // cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => {
-      renderer.dispose();
-    };
+      return () => {
+        renderer.dispose();
+        // scene.dispose();
+      };
+    }
   }, []);
 
-  //   useEffect(() => {
-  //     if (!containerRef.current) return;
-  //     renderer.setSize(windowSize.width, windowSize.height);
-  //   }, [windowSize]);
+  useEffect(() => {
+    window.addEventListener("resize", handleWindowResize, false);
+    return () => {
+      window.removeEventListener("resize", handleWindowResize, false);
+    };
+  }, [renderer, handleWindowResize]);
 
-  return <div className="earth" ref={containerRef} />;
+  return <div className={styles.earth} ref={containerRef} />;
 }
