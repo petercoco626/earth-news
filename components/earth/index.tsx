@@ -1,15 +1,14 @@
 import { useResize } from "hooks/useResize";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 import styles from "./index.module.css";
 
 export default function Earth() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [loading, setLoading] = useState(true);
   const [renderer, setRenderer] = useState<any>();
-  const [_camera, setCamera] = useState<any>();
   const [scene] = useState(new THREE.Scene());
 
   const handleWindowResize = useCallback(() => {
@@ -25,28 +24,40 @@ export default function Earth() {
   useEffect(() => {
     const { current: container } = containerRef;
     if (container && !renderer) {
-      console.log("Hi");
+      // 해당 태그가 랜더링이 되면 크기를 알 수 있다.
       const scW = container.clientWidth;
       const scH = container.clientHeight;
-      console.log(scW, scH);
 
+      // 도화지
       const renderer = new THREE.WebGLRenderer();
       renderer.setSize(scW, scH);
+
+      // 도화지를 dom에 추가한다.
       container.appendChild(renderer.domElement);
+
+      // 사실 이건 resize용으로 느낌에는 포인터를 전달하는거 같음.
       setRenderer(renderer);
 
+      // 카메라는 좀더 공부해봐야함.
       const camera = new THREE.PerspectiveCamera(50, scW / scH, 0.1, 1000);
 
+      // cube 생성기.
       const geometry = new THREE.BoxGeometry(1, 1, 1);
       const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
       const cube = new THREE.Mesh(geometry, material);
       camera.position.z = 5;
+
+      // sence에 큐브 추가하기.
       scene.add(cube);
 
+      // 현재 코드에서는 돔 자체를 이동시키는거 같음?
+      const controls = new OrbitControls(camera, renderer.domElement);
+
       const animate = function () {
+        // 정확히 어떤 기능인지 파악 필요.
         requestAnimationFrame(animate);
 
-        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
         renderer.render(scene, camera);
       };
       animate();
