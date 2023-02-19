@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import styles from "./index.module.css";
 
 export default function Earth() {
@@ -11,6 +10,9 @@ export default function Earth() {
 
   const [renderer, setRenderer] = useState<any>();
   const [scene] = useState(new THREE.Scene());
+  const [raycaster, setRaycaster] = useState<any>(null);
+  const [mouse, setMouse] = useState(new THREE.Vector2());
+  const [_camera, setCamera] = useState<any>(null);
 
   const handleWindowResize = useCallback(() => {
     const { current: container } = containerRef;
@@ -21,10 +23,6 @@ export default function Earth() {
       renderer.setSize(scW, scH);
     }
   }, [renderer]);
-
-  const easeOutCirc = (x: number) => {
-    return Math.sqrt(1 - Math.pow(x - 1, 4));
-  };
 
   useEffect(() => {
     const { current: container } = containerRef;
@@ -48,6 +46,8 @@ export default function Earth() {
 
       // 카메라 위치에 따라서도 안보일 수가 있다.
       camera.position.set(0, 1, 2);
+
+      setCamera(camera);
 
       // cube 생성기.
       // const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -79,6 +79,39 @@ export default function Earth() {
 
       // sence에 큐브 추가하기.
       // scene.add(cube);
+
+      // Create the raycaster
+      const raycaster = new THREE.Raycaster();
+      setRaycaster(raycaster);
+
+      const onMouseClick = (event: any) => {
+        // Calculate the mouse position in normalized device coordinates (-1 to +1)
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const w = rect.width;
+        const h = rect.height;
+        const mouseX = (x / w) * 2 - 1;
+        const mouseY = -(y / h) * 2 + 1;
+        setMouse(new THREE.Vector2(mouseX, mouseY));
+
+        // Cast a ray from the camera through the mouse position
+        raycaster.setFromCamera(mouse, camera);
+
+        // Find all intersected objects
+        const intersects = raycaster.intersectObjects(scene.children, true);
+
+        // Check if any objects were intersected
+        if (intersects.length > 0) {
+          // Handle the click event on the first intersected object
+          const firstIntersect = intersects[0].object;
+          console.log("Clicked on object:", firstIntersect);
+        }
+      };
+
+      // Attach a click event to the canvas
+      container.addEventListener("click", onMouseClick, false);
 
       // 현재 코드에서는 돔 자체를 이동시키는거 같음?
       const controls = new OrbitControls(camera, renderer.domElement);
